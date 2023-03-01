@@ -10,19 +10,20 @@ arch=('x86_64')
 url="https://slack.com/downloads"
 license=('custom')
 depends=('gtk3' 'libsecret' 'libxss' 'nss' 'xdg-utils')
+makedepends=('setconf')
 optdepends=('libappindicator-gtk3: Systray indicator support'
             'org.freedesktop.secrets: Keyring password store support')
-source=("https://downloads.slack-edge.com/releases/linux/${pkgver}/prod/x64/${pkgname}-${pkgver}-amd64.deb"
-        "${pkgname}.patch")
+source=("https://downloads.slack-edge.com/releases/linux/${pkgver}/prod/x64/${pkgname}-${pkgver}-amd64.deb")
 noextract=("${pkgname}-${pkgver}-amd64.deb")
-b2sums=('1d36947c5b4da0a2e301b3510dff9e5d3dbc6a3a2f0411980792984a497578d239dbc90dfb6af5cfe6d87dbcb7c3acac3b79c86daf6d58a4a9e69223472447f6'
-        'b5786265fcaf85be4134a444d5c2376f3b3753b667ac8b5237d74cbc643433148ec0a4f8ddfe65276d6029cc6941b464938e6c37f904c2369cbe14ca3f1819dd')
+b2sums=('1d36947c5b4da0a2e301b3510dff9e5d3dbc6a3a2f0411980792984a497578d239dbc90dfb6af5cfe6d87dbcb7c3acac3b79c86daf6d58a4a9e69223472447f6')
 
 package() {
     bsdtar -O -xf "slack-desktop-${pkgver}"*.deb data.tar.xz | bsdtar -C "${pkgdir}" -xJf -
 
     # Fix hardcoded icon path in .desktop file
-    patch -d "${pkgdir}" -p1 <"${pkgname}".patch
+    setconf "$pkgdir/usr/share/applications/slack.desktop" Icon "slack"
+    # Start slack with ozone platform hinting for wayland support
+    setconf "$pkgdir/usr/share/applications/slack.desktop" Exec "/usr/bin/slack -s --ozone-platform-hint=auto %U"
 
     # Permission fix
     find "${pkgdir}" -type d -exec chmod 755 {} +
